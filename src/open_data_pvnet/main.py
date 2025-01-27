@@ -2,7 +2,11 @@ import argparse
 import logging
 from open_data_pvnet.scripts.archive import handle_archive
 from open_data_pvnet.utils.env_loader import load_environment_variables
-from open_data_pvnet.utils.data_downloader import load_zarr_data
+from open_data_pvnet.utils.data_downloader import (
+    load_zarr_data,
+    load_month_zarr_data,
+    load_day_zarr_data,
+)
 from pathlib import Path
 import concurrent.futures
 from typing import List, Tuple
@@ -76,7 +80,12 @@ def _add_common_arguments(parser, provider_name):
     """Add arguments common to both archive and load operations."""
     parser.add_argument("--year", type=int, required=True, help="Year of data")
     parser.add_argument("--month", type=int, required=True, help="Month of data")
-    parser.add_argument("--day", type=int, required=True, help="Day of data")
+    parser.add_argument(
+        "--day",
+        type=int,
+        help="Day of data (optional - if not provided, loads entire month)",
+        default=None,
+    )
 
     # Add Met Office specific arguments
     if provider_name == "metoffice":
@@ -114,12 +123,44 @@ def parse_chunks(chunks_str):
 
 def handle_load(provider: str, year: int, month: int, day: int, **kwargs):
     """Handle loading archived data."""
-    hour = kwargs.get("hour", 0)  # Default to hour 0 if not specified
+    # If day is provided but hour is not, load the entire day
+    if day is not None and kwargs.get("hour") is None:
+        try:
+            dataset = load_day_zarr_data(
+                year=year,
+                month=month,
+                day=day,
+                region=kwargs.get("region", "uk"),
+                chunks=parse_chunks(kwargs.get("chunks")),
+                remote=kwargs.get("remote", False),
+            )
+            logger.info(f"Successfully loaded dataset for {year}-{month:02d}-{day:02d}")
+            return dataset
+        except Exception as e:
+            logger.error(f"Error loading daily dataset: {e}")
+            raise
+
+    # If day is None, load the entire month
+    if day is None:
+        try:
+            dataset = load_month_zarr_data(
+                year=year,
+                month=month,
+                region=kwargs.get("region", "uk"),
+                chunks=parse_chunks(kwargs.get("chunks")),
+                remote=kwargs.get("remote", False),
+            )
+            logger.info(f"Successfully loaded dataset for {year}-{month:02d}")
+            return dataset
+        except Exception as e:
+            logger.error(f"Error loading monthly dataset: {e}")
+            raise
+
+    # Single hour loading logic
+    hour = kwargs.get("hour", 0)
     chunks = parse_chunks(kwargs.get("chunks"))
     remote = kwargs.get("remote", False)
 
-    # Construct the archive path based on provider and parameters
-    # Format: data/2023/01/16/2023-01-16-00.zarr.zip
     archive_path = (
         Path("data")
         / str(year)
@@ -133,7 +174,7 @@ def handle_load(provider: str, year: int, month: int, day: int, **kwargs):
             archive_path,
             chunks=chunks,
             remote=remote,
-            download=not remote,  # Don't try to download if remote=True
+            download=not remote,
         )
         logger.info(f"Successfully loaded dataset for {year}-{month:02d}-{day:02d} hour {hour:02d}")
         return dataset

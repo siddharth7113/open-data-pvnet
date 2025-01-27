@@ -5,6 +5,7 @@ import logging
 from typing import Union, Optional, List
 from huggingface_hub import hf_hub_download
 import fsspec
+import calendar
 
 logger = logging.getLogger(__name__)
 
@@ -188,3 +189,126 @@ def load_zarr_data(
     except Exception as e:
         logger.error(f"Error loading zarr dataset: {e}")
         raise
+
+
+def load_day_zarr_data(
+    year: int,
+    month: int,
+    day: int,
+    region: str = "uk",
+    chunks: Optional[dict] = None,
+    remote: bool = False,
+) -> xr.Dataset:
+    """
+    Load and combine all hourly zarr datasets for a single day.
+
+    Args:
+        year (int): The year to load data for
+        month (int): The month to load data for (1-12)
+        day (int): The day to load data for
+        region (str): Region of data ('uk' or 'global')
+        chunks (Optional[dict]): Dictionary specifying chunk sizes
+        remote (bool): Whether to load the data lazily from HuggingFace
+
+    Returns:
+        xr.Dataset: Combined dataset for the entire day
+    """
+    datasets = []
+
+    logger.info(f"Loading data for {year}-{month:02d}-{day:02d}")
+
+    for hour in range(24):
+        # Construct the archive path
+        archive_path = (
+            Path("data")
+            / str(year)
+            / f"{month:02d}"
+            / f"{day:02d}"
+            / f"{year}-{month:02d}-{day:02d}-{hour:02d}.zarr.zip"
+        )
+
+        try:
+            ds = load_zarr_data(
+                archive_path=archive_path,
+                chunks=chunks,
+                download=not remote,
+                remote=remote,
+                restructure=True,
+            )
+            datasets.append(ds)
+        except Exception as e:
+            logger.warning(f"Could not load data for hour {hour:02d}: {e}")
+            continue
+
+    if not datasets:
+        raise ValueError(f"No datasets could be loaded for {year}-{month:02d}-{day:02d}")
+
+    # Concatenate all datasets along the time dimension
+    logger.info(f"Combining {len(datasets)} hourly datasets")
+    combined_dataset = xr.concat(datasets, dim="time")
+    logger.info(f"Successfully created combined dataset with shape: {dict(combined_dataset.dims)}")
+
+    return combined_dataset
+
+
+def load_month_zarr_data(
+    year: int,
+    month: int,
+    region: str = "uk",
+    chunks: Optional[dict] = None,
+    remote: bool = False,
+) -> xr.Dataset:
+    """
+    Load and combine all hourly zarr datasets for an entire month.
+
+    Args:
+        year (int): The year to load data for
+        month (int): The month to load data for (1-12)
+        region (str): Region of data ('uk' or 'global')
+        chunks (Optional[dict]): Dictionary specifying chunk sizes
+        remote (bool): Whether to load the data lazily from HuggingFace
+
+    Returns:
+        xr.Dataset: Combined dataset for the entire month
+    """
+    # Get number of days in the month
+    num_days = calendar.monthrange(year, month)[1]
+    datasets = []
+
+    logger.info(f"Loading data for {year}-{month:02d} ({num_days} days)")
+
+    for day in range(1, num_days + 1):
+        for hour in range(24):
+            # Construct the archive path
+            archive_path = (
+                Path("data")
+                / str(year)
+                / f"{month:02d}"
+                / f"{day:02d}"
+                / f"{year}-{month:02d}-{day:02d}-{hour:02d}.zarr.zip"
+            )
+
+            try:
+                ds = load_zarr_data(
+                    archive_path=archive_path,
+                    chunks=chunks,
+                    download=not remote,
+                    remote=remote,
+                    restructure=True,
+                )
+                datasets.append(ds)
+            except Exception as e:
+                logger.warning(
+                    f"Could not load data for {year}-{month:02d}-{day:02d} hour {hour:02d}: {e}"
+                )
+                continue
+
+    if not datasets:
+        raise ValueError(f"No datasets could be loaded for {year}-{month:02d}")
+
+    # Concatenate all datasets along the time dimension
+    logger.info(f"Combining {len(datasets)} hourly datasets")
+    combined_dataset = xr.concat(datasets, dim="time")
+    logger.info(f"Successfully created combined dataset with shape: {dict(combined_dataset.dims)}")
+
+    return combined_dataset
