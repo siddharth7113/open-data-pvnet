@@ -12,9 +12,9 @@ input_data:
       accum_channels: []
       max_staleness_minutes: 1080 # Match interval_end_minutes for consistency
       zarr_path: "s3://ocf-open-data-pvnet/data/gfs.zarr"
-      provider: "ecmwf"
-      image_size_pixels_height: 64
-      image_size_pixels_width: 64
+      provider: "gfs"
+      image_size_pixels_height: 1
+      image_size_pixels_width: 1
       channels:
         [
           "dlwrf",
@@ -24,7 +24,6 @@ input_data:
           "mcc",
           "prate",
           "r",
-          "sde",
           "t",
           "tcc",
           "u10",
