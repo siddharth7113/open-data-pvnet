@@ -19,6 +19,7 @@ Welcome to the Solar Forecasting project! This document will introduce you to th
 14. [Helpful Knowledge and Skills](#helpful-knowledge-and-skills)
 15. [How This Project Fits into Renewable Energy](#how-this-project-fits-into-renewable-energy)
 16. [Development and Testing Guide](#development-and-testing-guide)
+17. [Command Line Interface (CLI)](#command-line-interface-cli)
 
 ---
 
@@ -149,8 +150,8 @@ APIs play a crucial role in fetching real-time and historical data required for 
 3. **Satellite Data APIs**
    Satellite imagery and radiance data are invaluable for analyzing cloud cover and solar irradiance:
    - **Copernicus Atmosphere Monitoring Service (CAMS)**: Provides satellite-based aerosol, cloud, and solar radiation data. [Learn more](https://atmosphere.copernicus.eu/).
-   - **NASA’s POWER API**: Offers meteorological and solar datasets tailored for renewable energy applications, including European regions. [Learn more](https://power.larc.nasa.gov/).
-   - **EUMETSAT**: Europe’s satellite-based service providing weather and climate data, including cloud cover and solar radiation products. [Learn more](https://www.eumetsat.int/).
+   - **NASA's POWER API**: Offers meteorological and solar datasets tailored for renewable energy applications, including European regions. [Learn more](https://power.larc.nasa.gov/).
+   - **EUMETSAT**: Europe's satellite-based service providing weather and climate data, including cloud cover and solar radiation products. [Learn more](https://www.eumetsat.int/).
 
 4. **AWS S3 Access**
    You will need access to the AWS S3 bucket containing the NWP data. Ensure you have the required permissions to list and download objects from the bucket.
@@ -261,7 +262,7 @@ Below is a glossary of key terms that might be useful when working on this proje
 
 ### Geospatial Terms
 
-- **Geostationary**: A satellite orbit where the satellite remains fixed relative to a specific point on Earth’s surface, providing continuous observation of the same region. Commonly used in weather monitoring and solar radiation measurement.
+- **Geostationary**: A satellite orbit where the satellite remains fixed relative to a specific point on Earth's surface, providing continuous observation of the same region. Commonly used in weather monitoring and solar radiation measurement.
 - **Geospatial Data**: Information about objects, events, or phenomena on Earth's surface, represented by geographic coordinates and often used in mapping and analysis.
 - **Latitude**: The angular distance of a location north or south of the equator, measured in degrees. Important for determining solar angles and irradiance.
 - **Longitude**: The angular distance of a location east or west of the prime meridian, measured in degrees. Used in conjunction with latitude to pinpoint geographic locations.
@@ -288,7 +289,7 @@ Below is a glossary of key terms that might be useful when working on this proje
 - **Atmospheric Pressure**: The force exerted by the weight of the atmosphere above a given point, measured in hectopascals (hPa) or millibars (mb). It affects weather patterns and the movement of air masses.
 - **Relative Humidity**: The amount of water vapor in the air compared to the maximum amount the air can hold at a given temperature, expressed as a percentage. It influences cloud formation and precipitation.
 - **Dew Point**: The temperature at which air becomes saturated with moisture and water vapor condenses into dew, clouds, or fog.
-- **Radiative Forcing**: The change in the energy balance of the Earth’s atmosphere due to factors like greenhouse gases, aerosols, and changes in solar irradiance. It is a key concept in climate change studies.
+- **Radiative Forcing**: The change in the energy balance of the Earth's atmosphere due to factors like greenhouse gases, aerosols, and changes in solar irradiance. It is a key concept in climate change studies.
 - **Turbidity**: A measure of the atmosphere's clarity, influenced by aerosols, dust, and pollution. High turbidity reduces the amount of solar radiation reaching the Earth's surface.
 - **Ozone Layer**: A layer of ozone (O₃) in the stratosphere that absorbs the majority of the Sun’s harmful ultraviolet radiation. Changes in the ozone layer can impact solar irradiance measurements.
 - **Wind Shear**: A change in wind speed or direction over a short distance in the atmosphere. It can influence cloud formation, storm development, and the dispersal of aerosols.
@@ -539,6 +540,76 @@ Use `pytest` to ensure the project works as expected:
    ```bash
    pytest tests/test_main.py
    ```
+
+---
+
+## Command Line Interface (CLI)
+
+The `open-data-pvnet` CLI provides various commands for downloading, processing, and loading weather and solar data.
+
+### Basic Structure
+```bash
+open-data-pvnet <provider> <operation> [options]
+```
+
+### Available Providers
+- `metoffice`: UK Met Office weather data
+- `gfs`: Global Forecast System data (coming soon)
+- `dwd`: German Weather Service data (coming soon)
+
+### Operations
+1. **archive**: Download and archive data
+   ```bash
+   # Archive a single hour
+   open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk
+
+   # Archive an entire day with parallel processing
+   open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk --workers 4
+   ```
+
+2. **load**: Load archived data for analysis
+   ```bash
+   # Load a single hour
+   open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk
+
+   # Load an entire day
+   open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --region uk
+
+   # Load with custom chunking
+   open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --region uk \
+     --chunks "time:24,latitude:100,longitude:100"
+   ```
+
+### Common Options
+- `--region`: Specify data region (`uk` or `global`) for Met Office data
+- `--overwrite`: Force overwrite of existing files
+- `--remote`: Load data remotely without downloading
+- `--chunks`: Specify chunking for data loading
+- `--workers`: Number of parallel workers for archiving (default: 1)
+- `--archive-type`: Type of archive to create (`zarr.zip` or `tar`)
+
+### Examples for Different Use Cases
+
+#### Working with UK Data
+```bash
+# Download Met Office UK weather data
+open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk --workers 2
+
+# Load and analyze the data
+open-data-pvnet metoffice load --year 2023 --month 12 --day 1 --region uk
+```
+
+#### Remote Data Access
+```bash
+# Load data directly from HuggingFace without downloading
+open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --region uk --remote
+```
+
+### Error Handling
+Common error messages and their solutions:
+- "No datasets found": Check if the specified date has available data
+- "Error loading dataset": Verify your internet connection and credentials
+- "Invalid chunks specification": Ensure chunk string follows the format "dim1:size1,dim2:size2"
 
 ---
 

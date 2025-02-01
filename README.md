@@ -18,7 +18,18 @@ Tasks include:
 
 We will begin in the UK to benchmark against OCF results and expand to other countries as the project progresses. 😄
 
----
+
+### Basic Usage Examples
+```bash
+# Archive Met Office UK data for a specific day in zarr format to Hugging Face
+open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk
+
+# Load data for analysis
+open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --region uk
+
+```
+
+For detailed usage instructions and examples, see our [Getting Started Guide](getting_started.md#command-line-interface-cli).
 
 ## Volunteer Skills/Roles Needed
 

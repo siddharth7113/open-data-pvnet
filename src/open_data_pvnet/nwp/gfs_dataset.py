@@ -22,6 +22,7 @@ logging.basicConfig(level=logging.WARNING)
 # Ensure xarray retains attributes during operations
 xr.set_options(keep_attrs=True)
 
+
 def open_gfs(dataset_path: str) -> xr.DataArray:
     """
     Opens the GFS dataset stored in Zarr format and prepares it for processing.
@@ -50,7 +51,9 @@ def open_gfs(dataset_path: str) -> xr.DataArray:
     return gfs_data
 
 
-def handle_nan_values(dataset: xr.DataArray, method: str = "fill", fill_value: float = 0.0) -> xr.DataArray:
+def handle_nan_values(
+    dataset: xr.DataArray, method: str = "fill", fill_value: float = 0.0
+) -> xr.DataArray:
     """
     Handle NaN values in the dataset.
 
@@ -133,7 +136,9 @@ class GFSDataSampler(Dataset):
         logging.info(f"Generating sample for t0={t0}...")
         interval_start = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.interval_start_minutes)
         interval_end = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.interval_end_minutes)
-        time_resolution = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.time_resolution_minutes)
+        time_resolution = pd.Timedelta(
+            minutes=self.config.input_data.nwp.gfs.time_resolution_minutes
+        )
 
         start_dt = t0 + interval_start
         end_dt = t0 + interval_end
