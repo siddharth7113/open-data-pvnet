@@ -178,16 +178,16 @@ APIs play a crucial role in fetching real-time and historical data required for 
       - Use the `aws s3 ls` command to list the available objects in the bucket.
       - Example: `aws s3 ls --no-sign-request s3://ocf-open-data-pvnet/data/`
       - Use the `aws s3 cp` command to download the data to your local machine.
-        
-5.## Accessing GFS Data from S3
-The GFS data is stored in the S3 bucket `s3://ocf-open-data-pvnet/data/gfs.zarr/`. To access and work with this data, you can use Python libraries such as `xarray` and `s3fs`. These libraries allow you to directly read Zarr-formatted data from S3.
+
+5. **Accessing GFS Data from S3**
+The GFS data is stored in a S3 bucket `s3://ocf-open-data-pvnet/data/gfs.zarr/`. To access and work with this data, you can use Python libraries such as `xarray` and `s3fs`. These libraries allow you to directly read Zarr-formatted data from S3.
 
 ### Prerequisites
 Before accessing the data, ensure you have the following Python packages installed:
 
 ```bash
 pip install xarray zarr s3fs
-### Example Code
+```
 
 Below is an example of how to open the GFS dataset from the S3 bucket using Python:
 
@@ -201,7 +201,7 @@ dataset_path = 's3://ocf-open-data-pvnet/data/gfs.zarr/'
 ds = xr.open_zarr(s3.get_mapper(dataset_path), consolidated=True)
 # Display the dataset
 print(ds)
----
+```
 
 ### Best Practices for Using APIs
 
