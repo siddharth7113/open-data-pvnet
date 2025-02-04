@@ -2,11 +2,7 @@ import argparse
 import logging
 from open_data_pvnet.scripts.archive import handle_archive
 from open_data_pvnet.utils.env_loader import load_environment_variables
-from open_data_pvnet.utils.data_downloader import (
-    load_zarr_data,
-    load_month_zarr_data,
-    load_day_zarr_data,
-)
+from open_data_pvnet.utils.data_downloader import load_zarr_data, load_zarr_data_for_day
 from pathlib import Path
 import concurrent.futures
 from typing import List, Tuple
@@ -123,60 +119,41 @@ def parse_chunks(chunks_str):
 
 def handle_load(provider: str, year: int, month: int, day: int, **kwargs):
     """Handle loading archived data."""
-    # If day is provided but hour is not, load the entire day
-    if day is not None and kwargs.get("hour") is None:
-        try:
-            dataset = load_day_zarr_data(
-                year=year,
-                month=month,
-                day=day,
-                region=kwargs.get("region", "uk"),
-                chunks=parse_chunks(kwargs.get("chunks")),
-                remote=kwargs.get("remote", False),
-            )
-            logger.info(f"Successfully loaded dataset for {year}-{month:02d}-{day:02d}")
-            return dataset
-        except Exception as e:
-            logger.error(f"Error loading daily dataset: {e}")
-            raise
-
-    # If day is None, load the entire month
-    if day is None:
-        try:
-            dataset = load_month_zarr_data(
-                year=year,
-                month=month,
-                region=kwargs.get("region", "uk"),
-                chunks=parse_chunks(kwargs.get("chunks")),
-                remote=kwargs.get("remote", False),
-            )
-            logger.info(f"Successfully loaded dataset for {year}-{month:02d}")
-            return dataset
-        except Exception as e:
-            logger.error(f"Error loading monthly dataset: {e}")
-            raise
-
-    # Single hour loading logic
-    hour = kwargs.get("hour", 0)
     chunks = parse_chunks(kwargs.get("chunks"))
     remote = kwargs.get("remote", False)
+    hour = kwargs.get("hour")
 
-    archive_path = (
-        Path("data")
-        / str(year)
-        / f"{month:02d}"
-        / f"{day:02d}"
-        / f"{year}-{month:02d}-{day:02d}-{hour:02d}.zarr.zip"
-    )
+    # Base path for the data
+    base_path = Path("data") / str(year) / f"{month:02d}" / f"{day:02d}"
 
     try:
-        dataset = load_zarr_data(
-            archive_path,
-            chunks=chunks,
-            remote=remote,
-            download=not remote,
-        )
-        logger.info(f"Successfully loaded dataset for {year}-{month:02d}-{day:02d} hour {hour:02d}")
+        if hour is not None:
+            # Load specific hour
+            archive_path = base_path / f"{year}-{month:02d}-{day:02d}-{hour:02d}.zarr.zip"
+            dataset = load_zarr_data(
+                archive_path,
+                chunks=chunks,
+                remote=remote,
+                download=not remote,
+            )
+            logger.info(
+                f"Successfully loaded dataset for {year}-{month:02d}-{day:02d} hour {hour:02d}"
+            )
+        else:
+            # Load all hours for the day
+            dataset = load_zarr_data_for_day(
+                base_path,
+                year,
+                month,
+                day,
+                chunks=chunks,
+                remote=remote,
+                download=not remote,
+            )
+            logger.info(
+                f"Successfully loaded all available datasets for {year}-{month:02d}-{day:02d}"
+            )
+
         return dataset
     except Exception as e:
         logger.error(f"Error loading dataset: {e}")
