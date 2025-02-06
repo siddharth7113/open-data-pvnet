@@ -1,11 +1,17 @@
 import argparse
 import logging
-from open_data_pvnet.scripts.archive import handle_archive
 from open_data_pvnet.utils.env_loader import load_environment_variables
-from open_data_pvnet.utils.data_downloader import load_zarr_data, load_zarr_data_for_day
+from open_data_pvnet.utils.data_downloader import (
+    load_zarr_data,
+    load_zarr_data_for_day,
+    merge_hours_to_day,
+    process_month_by_days,
+    merge_days_to_month,
+)
 from pathlib import Path
 import concurrent.futures
 from typing import List, Tuple
+from open_data_pvnet.utils.data_uploader import upload_monthly_zarr, upload_to_huggingface
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +63,10 @@ def add_provider_parser(subparsers, provider_name):
         help="Number of concurrent workers for parallel processing (default: 1)",
     )
 
-    # Load operation parser
-    load_parser = operation_subparsers.add_parser("load", help="Load archived data")
+    # Load operation parser (HuggingFace -> memory)
+    load_parser = operation_subparsers.add_parser(
+        "load", help="Load archived data from Hugging Face"
+    )
     _add_common_arguments(load_parser, provider_name)
     load_parser.add_argument(
         "--chunks",
@@ -69,6 +77,19 @@ def add_provider_parser(subparsers, provider_name):
         "--remote",
         action="store_true",
         help="Load data lazily from HuggingFace without downloading",
+    )
+
+    # Consolidate operation parser
+    consolidate_parser = operation_subparsers.add_parser(
+        "consolidate", help="Consolidate hourly files into daily/monthly zarr.zip file"
+    )
+    consolidate_parser.add_argument("--year", type=int, required=True, help="Year of data")
+    consolidate_parser.add_argument("--month", type=int, required=True, help="Month of data")
+    consolidate_parser.add_argument("--day", type=int, help="Day of data (optional)")
+    consolidate_parser.add_argument(
+        "--chunks",
+        type=str,
+        help="Chunking specification for output file",
     )
 
 
@@ -253,91 +274,132 @@ def parallel_archive(
                 raise future.exception()
 
 
+def handle_monthly_consolidation(provider: str, year: int, month: int, **kwargs):
+    """Handle consolidating data into zarr.zip files."""
+    chunks = parse_chunks(kwargs.get("chunks"))
+    base_path = Path("data")
+    day = kwargs.get("day")
+
+    try:
+        if day is not None:
+            # Consolidate a single day
+            logger.info(f"Consolidating day {year}-{month:02d}-{day:02d}")
+            daily_file = merge_hours_to_day(base_path, year, month, day, chunks)
+            logger.info(f"Successfully consolidated day to {daily_file}")
+            return
+
+        # First ensure all days are processed
+        logger.info(f"Processing all days in month {year}-{month:02d}")
+        successful_files = process_month_by_days(base_path, year, month, chunks)
+
+        if successful_files:
+            logger.info("\nSuccessfully created daily files:")
+            for file in successful_files:
+                logger.info(f"- {file}")
+
+            # Now create the monthly file
+            logger.info("\nCreating monthly consolidated file")
+            monthly_file = merge_days_to_month(base_path, year, month, chunks)
+            logger.info(f"Successfully created monthly file: {monthly_file}")
+        else:
+            logger.warning("No daily files were created, cannot create monthly file")
+
+    except Exception as e:
+        logger.error(f"Error in consolidation: {e}")
+        raise
+
+
+def handle_upload(provider: str, year: int, month: int, day: int = None, **kwargs):
+    """Handle uploading data to Hugging Face."""
+    config_path = Path("config.yaml")
+    overwrite = kwargs.get("overwrite", False)
+    upload_type = kwargs.get("type", "hourly")  # New parameter to specify upload type
+
+    try:
+        if upload_type == "monthly":
+            # Upload monthly consolidated file
+            logger.info(f"Uploading monthly consolidated file for {year}-{month:02d}")
+            upload_monthly_zarr(
+                config_path=config_path, year=year, month=month, overwrite=overwrite
+            )
+        else:
+            # Original hourly upload functionality
+            logger.info(f"Uploading hourly data for {year}-{month:02d}-{day:02d}")
+            upload_to_huggingface(
+                config_path=config_path,
+                folder_name=f"{year}-{month:02d}-{day:02d}",
+                year=year,
+                month=month,
+                day=day,
+                overwrite=overwrite,
+            )
+
+    except Exception as e:
+        logger.error(f"Error in upload: {e}")
+        raise
+
+
+def handle_archive(provider: str, year: int, month: int, day: int = None, **kwargs):
+    """Handle archiving data to Hugging Face."""
+    config_path = Path("config.yaml")
+    overwrite = kwargs.get("overwrite", False)
+
+    try:
+        if day is not None:
+            # Archive daily data (existing functionality)
+            logger.info(f"Archiving daily data for {year}-{month:02d}-{day:02d}")
+            upload_to_huggingface(
+                config_path=config_path,
+                folder_name=f"{year}-{month:02d}-{day:02d}",
+                year=year,
+                month=month,
+                day=day,
+                overwrite=overwrite,
+            )
+        else:
+            # Archive monthly consolidated file
+            logger.info(f"Archiving monthly consolidated file for {year}-{month:02d}")
+            upload_monthly_zarr(
+                config_path=config_path, year=year, month=month, overwrite=overwrite
+            )
+
+    except Exception as e:
+        logger.error(f"Error in archive: {e}")
+        raise
+
+
 def main():
-    """Entry point for the Open Data PVNet CLI tool.
+    """Main entry point for the application."""
+    parser = argparse.ArgumentParser(description="Open Data PVNet CLI")
+    parser.add_argument("provider", choices=["metoffice"], help="Data provider")
+    parser.add_argument(
+        "operation", choices=["download", "consolidate", "archive"], help="Operation to perform"
+    )
+    parser.add_argument("--year", type=int, required=True, help="Year")
+    parser.add_argument("--month", type=int, required=True, help="Month")
+    parser.add_argument(
+        "--day", type=int, help="Day (optional for monthly operations)"
+    )  # Made optional
+    parser.add_argument("--chunks", type=str, help="Chunk sizes as JSON string")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files")
 
-    Examples:
-    ---------
-    Met Office Data:
-        # Archive all hours for a given day with default workers (1)
-        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk -o
-
-        # Archive all hours for a given day with parallel processing with 4 workers
-        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk -o --workers 4
-
-        # Archive global region data for a specific hour
-        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region global -o
-
-        # Archive as tar instead of zarr.zip
-        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o --archive-type tar
-
-    GFS Data:
-        Not implemented yet
-
-    DWD Data:
-        Not implemented yet
-
-    Loading Data:
-        # Load local data with default chunking
-        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk
-
-        # Load remotely without downloading
-        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk --remote
-
-        # Load with custom chunking
-        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk --chunks "time:24,latitude:100,longitude:100"
-
-    List Available Providers:
-        open-data-pvnet --list providers
-    """
-    load_env_and_setup_logger()
-    parser = configure_parser()
     args = parser.parse_args()
 
-    if args.list == "providers":
-        print("Available providers:")
-        for provider in PROVIDERS:
-            print(f"- {provider}")
-        return
+    # Convert args to dict for easier handling
+    kwargs = vars(args)
 
-    if not args.command:
-        parser.print_help()
-        return
+    # Load environment variables
+    load_env_and_setup_logger()
 
-    kwargs = {
-        "provider": args.command,
-        "year": args.year,
-        "month": args.month,
-        "day": args.day,
-        "hour": getattr(args, "hour", None),
-        "overwrite": args.overwrite,
-        "remote": getattr(args, "remote", False),
-    }
-
-    # Only add region for Met Office commands
-    if args.command == "metoffice":
-        kwargs["region"] = args.region
-
-    if args.operation == "archive":
-        # If specific hour is provided, use regular archiving
-        if kwargs["hour"] is not None:
-            archive_kwargs = {k: v for k, v in kwargs.items() if k != "remote"}
-            archive_kwargs["archive_type"] = args.archive_type
-            handle_archive(**archive_kwargs)
-        else:
-            # Use parallel archiving for full day
-            parallel_archive(
-                provider=kwargs["provider"],
-                year=kwargs["year"],
-                month=kwargs["month"],
-                day=kwargs["day"],
-                region=kwargs["region"],
-                overwrite=kwargs["overwrite"],
-                archive_type=args.archive_type,
-                max_workers=args.workers,
-            )
-    elif args.operation == "load":
-        kwargs["chunks"] = getattr(args, "chunks", None)
+    # Execute the requested operation
+    if args.operation == "download":
+        if args.day is None:
+            logger.error("Day parameter is required for download operation")
+            return 1
         handle_load(**kwargs)
-    else:
-        parser.print_help()
+    elif args.operation == "consolidate":
+        handle_monthly_consolidation(**kwargs)
+    elif args.operation == "archive":
+        handle_archive(**kwargs)
+
+    return 0

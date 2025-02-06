@@ -249,3 +249,65 @@ def upload_to_huggingface(
     except Exception as e:
         logger.error(f"Error uploading to Hugging Face: {e}")
         raise
+
+
+def upload_monthly_zarr(
+    config_path: Path,
+    year: int,
+    month: int,
+    overwrite: bool = False,
+) -> None:
+    """
+    Upload a monthly consolidated zarr.zip file to the Hugging Face dataset repository.
+    """
+    repo_id = "openclimatefix/met-office-uk-deterministic-solar"
+
+    try:
+        # Validate token and get API instance (same as daily uploads)
+        hf_api, hf_token = _validate_token()
+        _ensure_repository(hf_api, repo_id, hf_token)
+
+        # Construct paths
+        month_str = f"{month:02d}"
+        monthly_file = f"{year}-{month_str}.zarr.zip"
+        local_path = Path("data") / str(year) / month_str / "monthly" / monthly_file
+
+        if not local_path.exists():
+            raise FileNotFoundError(f"Monthly consolidated file not found: {local_path}")
+
+        # Create the path structure: data/year/month/monthly/file.zarr.zip
+        target_path = f"data/{year}/{month_str}/monthly/{monthly_file}"
+        logger.info(f"Uploading monthly archive {local_path} to {repo_id}:{target_path}")
+
+        try:
+            if overwrite:
+                try:
+                    # Delete the file if it exists and overwrite is True
+                    hf_api.delete_file(
+                        path_in_repo=target_path,
+                        repo_id=repo_id,
+                        repo_type="dataset",
+                        token=hf_token,
+                    )
+                    logger.info(f"Deleted existing file {target_path} from repository")
+                except Exception as e:
+                    logger.debug(
+                        f"File {target_path} not found in repository or couldn't be deleted: {e}"
+                    )
+
+            # Upload the new file
+            hf_api.upload_file(
+                path_or_fileobj=str(local_path),
+                path_in_repo=target_path,
+                repo_id=repo_id,
+                repo_type="dataset",
+                token=hf_token,
+            )
+            logger.info(f"Upload completed for {local_path} to {repo_id}:{target_path}")
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to upload monthly archive: {e}")
+
+    except Exception as e:
+        logger.error(f"Error uploading monthly archive to Hugging Face: {e}")
+        raise
