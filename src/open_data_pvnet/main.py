@@ -372,6 +372,9 @@ def main():
         open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o --archive-type tar
 
         # Archive monthly data, this requires a consolidation first
+        open-data-pvnet metoffice archive --year 2023 --month 12
+
+        # Consolidate monthly data
         open-data-pvnet metoffice consolidate --year 2023 --month 12
 
         # Consolidate specific day
