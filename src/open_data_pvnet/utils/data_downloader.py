@@ -274,31 +274,32 @@ def load_zarr_data_for_day(  # noqa: C901
                 logger.warning(f"Error closing store: {e}")
 
 
-def save_consolidated_zarr(
-    dataset: xr.Dataset, output_path: Path, compression: Optional[dict] = None
-) -> None:
-    """Save a consolidated dataset to a zarr.zip file."""
-    if compression is None:
-        compression = {"compressor": zarr.Blosc(cname="zstd", clevel=3, shuffle=2)}
+def save_consolidated_zarr(dataset: xr.Dataset, output_path: Union[str, Path]) -> None:
+    """Save a consolidated dataset to zarr format.
 
+    Args:
+        dataset: The xarray Dataset to save
+        output_path: Path where to save the zarr archive
+    """
     logger.info(f"Saving consolidated dataset to {output_path}")
-
-    # Ensure parent directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Save to temporary zarr directory first
-    temp_dir = output_path.parent / f"{output_path.stem}_temp"
-    if temp_dir.exists():
-        shutil.rmtree(temp_dir)
-    temp_dir.mkdir(parents=True, exist_ok=True)
-
     try:
-        # Create encoding dict for each variable
-        encoding = {}
-        for var in dataset.data_vars:
-            # Get the actual chunk sizes from the dataset
-            chunks = tuple(x[0] for x in dataset[var].chunks)
-            encoding[var] = {"chunks": chunks, "compressor": compression["compressor"]}
+        # Get the first variable name from the dataset
+        first_var = list(dataset.data_vars)[0]
+
+        # Check if the dataset has chunks before creating encoding
+        encoding = None
+        if dataset[first_var].chunks is not None:
+            chunks = tuple(x[0] for x in dataset[first_var].chunks)
+            encoding = {var: {"chunks": chunks} for var in dataset.data_vars}
+
+        # Ensure parent directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Save to temporary zarr directory first
+        temp_dir = output_path.parent / f"{output_path.stem}_temp"
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+        temp_dir.mkdir(parents=True, exist_ok=True)
 
         # Save to temporary zarr directory
         logger.info("Writing to temporary directory...")

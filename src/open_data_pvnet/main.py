@@ -434,8 +434,26 @@ def main():
         }
         handle_load(**load_kwargs)
     elif args.operation == "consolidate":
-        handle_monthly_consolidation(**vars(args))
+        consolidate_kwargs = {
+            "provider": args.command,
+            "year": args.year,
+            "month": args.month,
+            "day": args.day,
+            "region": getattr(args, "region", None),
+            "overwrite": args.overwrite,
+        }
+        handle_monthly_consolidation(**consolidate_kwargs)
     elif args.operation == "archive":
-        handle_archive(**vars(args))
+        archive_kwargs = {
+            "provider": args.command,
+            "year": args.year,
+            "month": args.month,
+            "day": args.day,
+            "hour": getattr(args, "hour", None),
+            "region": getattr(args, "region", None),
+            "overwrite": args.overwrite,
+            "archive_type": getattr(args, "archive_type", "zarr.zip"),
+        }
+        handle_archive(**archive_kwargs)
 
     return 0
