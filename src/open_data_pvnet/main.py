@@ -211,7 +211,7 @@ def archive_hours_chunk(
     """Archive a chunk of hours."""
     start_hour, end_hour = hour_range
     for hour in range(start_hour, end_hour + 1):
-        handle_archive(
+        archive_to_hf(
             provider=provider,
             year=year,
             month=month,
@@ -324,7 +324,7 @@ def handle_upload(provider: str, year: int, month: int, day: int = None, **kwarg
         raise
 
 
-def handle_archive(provider: str, year: int, month: int, day: int = None, **kwargs):
+def archive_to_hf(provider: str, year: int, month: int, day: int = None, **kwargs):
     """Handle archiving data to Hugging Face."""
     config_path = Path("config.yaml")
     overwrite = kwargs.get("overwrite", False)
@@ -457,6 +457,6 @@ def main():
             "overwrite": args.overwrite,
             "archive_type": getattr(args, "archive_type", "zarr.zip"),
         }
-        handle_archive(**archive_kwargs)
+        archive_to_hf(**archive_kwargs)
 
     return 0
