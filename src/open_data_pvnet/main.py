@@ -371,7 +371,7 @@ def main():
         # Archive as tar instead of zarr.zip
         open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o --archive-type tar
 
-        # Consolidate daily files into monthly zarr
+        # Archive monthly data, this requires a consolidation first
         open-data-pvnet metoffice consolidate --year 2023 --month 12
 
         # Consolidate specific day
