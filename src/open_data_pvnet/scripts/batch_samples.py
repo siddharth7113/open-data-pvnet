@@ -13,10 +13,12 @@ from src.open_data_pvnet.utils.batch_utils import process_and_save_batches
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Define an identity collate function at the module level.
 # This function simply returns the batch as is.
 def identity_collate(batch):
     return batch
+
 
 def run_batch_samples(
     dataset_path: str,
@@ -25,7 +27,7 @@ def run_batch_samples(
     end_time: str,
     output_directory: str,
     dataloader_kwargs: dict = None,
-    num_batches: int = None
+    num_batches: int = None,
 ):
     """
     Runs the batch sampling process: loads the dataset, wraps it in a DataLoader,
@@ -42,13 +44,13 @@ def run_batch_samples(
     # Set default DataLoader kwargs if not provided.
     if dataloader_kwargs is None:
         dataloader_kwargs = {
-            "batch_size": 4,      # Example batch size; adjust as needed.
+            "batch_size": 4,  # Example batch size; adjust as needed.
             "shuffle": True,
             "num_workers": 2,
             "prefetch_factor": 2,
             "pin_memory": False,
             # Use the module-level identity_collate function.
-            "collate_fn": identity_collate
+            "collate_fn": identity_collate,
         }
 
     # Load and preprocess the raw dataset.
@@ -84,6 +86,7 @@ def run_batch_samples(
     process_and_save_batches(data_loader, output_directory, num_batches=num_batches)
     logger.info("All batches processed and saved.")
 
+
 # The __main__ block allows the script to be run standalone.
 # However, the main functionality is encapsulated in run_batch_samples(),
 # so it can also be imported and called from other parts of the repo.
@@ -95,4 +98,6 @@ if __name__ == "__main__":
     end_time = "2023-02-28T00:00:00"
     output_directory = "./saved_batches"
 
-    run_batch_samples(dataset_path, config_path, start_time, end_time, output_directory, num_batches=10)
+    run_batch_samples(
+        dataset_path, config_path, start_time, end_time, output_directory, num_batches=10
+    )

@@ -44,7 +44,9 @@ def open_gfs(dataset_path: str) -> xr.DataArray:
     """
     logging.info(f"Opening GFS dataset from {dataset_path}...")
     store = fsspec.get_mapper(dataset_path, anon=True)
-    gfs_dataset: xr.Dataset = xr.open_dataset(store, engine="zarr", consolidated=True, chunks="auto")
+    gfs_dataset: xr.Dataset = xr.open_dataset(
+        store, engine="zarr", consolidated=True, chunks="auto"
+    )
 
     # Convert dataset to DataArray for easier handling
     gfs_data: xr.DataArray = gfs_dataset.to_array(dim="channel")
@@ -62,7 +64,9 @@ def open_gfs(dataset_path: str) -> xr.DataArray:
     return gfs_data
 
 
-def handle_nan_values(dataset: xr.DataArray, method: str = "fill", fill_value: float = 0.0) -> xr.DataArray:
+def handle_nan_values(
+    dataset: xr.DataArray, method: str = "fill", fill_value: float = 0.0
+) -> xr.DataArray:
     """
     Handle NaN values in the dataset.
 
@@ -93,7 +97,13 @@ class GFSDataSampler(Dataset):
         valid_t0_times (pd.DataFrame): Dataframe of valid initialization times for sampling.
     """
 
-    def __init__(self, dataset: xr.DataArray, config_filename: str, start_time: str = None, end_time: str = None):
+    def __init__(
+        self,
+        dataset: xr.DataArray,
+        config_filename: str,
+        start_time: str = None,
+        end_time: str = None,
+    ):
         """
         Initialize the GFSDataSampler.
 
@@ -121,11 +131,17 @@ class GFSDataSampler(Dataset):
 
         # Apply time range filtering if specified
         if start_time:
-            self.valid_t0_times = self.valid_t0_times[self.valid_t0_times["t0"] >= pd.Timestamp(start_time)]
+            self.valid_t0_times = self.valid_t0_times[
+                self.valid_t0_times["t0"] >= pd.Timestamp(start_time)
+            ]
         if end_time:
-            self.valid_t0_times = self.valid_t0_times[self.valid_t0_times["t0"] <= pd.Timestamp(end_time)]
+            self.valid_t0_times = self.valid_t0_times[
+                self.valid_t0_times["t0"] <= pd.Timestamp(end_time)
+            ]
 
-        logging.info(f"Total valid initialization times after filtering: {len(self.valid_t0_times)}")
+        logging.info(
+            f"Total valid initialization times after filtering: {len(self.valid_t0_times)}"
+        )
 
     def __len__(self):
         return len(self.valid_t0_times)
@@ -152,7 +168,9 @@ class GFSDataSampler(Dataset):
 
         interval_start = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.interval_start_minutes)
         interval_end = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.interval_end_minutes)
-        time_resolution = pd.Timedelta(minutes=self.config.input_data.nwp.gfs.time_resolution_minutes)
+        time_resolution = pd.Timedelta(
+            minutes=self.config.input_data.nwp.gfs.time_resolution_minutes
+        )
 
         start_dt = t0 + interval_start
         end_dt = t0 + interval_end
@@ -160,7 +178,9 @@ class GFSDataSampler(Dataset):
 
         logging.info(f"Expected target times: {target_times}")
 
-        sliced_data = self.dataset.sel(init_time_utc=t0, step=[np.timedelta64((t - t0).value, "ns") for t in target_times])
+        sliced_data = self.dataset.sel(
+            init_time_utc=t0, step=[np.timedelta64((t - t0).value, "ns") for t in target_times]
+        )
         return self._normalize_sample(sliced_data)
 
     def _normalize_sample(self, dataset: xr.Dataset) -> xr.Dataset:
@@ -193,7 +213,7 @@ class GFSDataSampler(Dataset):
 
 #     # Load dataset
 #     dataset = open_gfs(dataset_path)
-    
+
 #     # Handle NaN values
 #     dataset = handle_nan_values(dataset, method="fill", fill_value=0.0)
 
