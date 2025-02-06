@@ -191,7 +191,7 @@ def load_zarr_data(
         raise
 
 
-def load_zarr_data_for_day(
+def load_zarr_data_for_day(  # noqa: C901
     base_path: Path,
     year: int,
     month: int,

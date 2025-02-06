@@ -38,61 +38,6 @@ def load_env_and_setup_logger():
         raise
 
 
-def add_provider_parser(subparsers, provider_name):
-    """Add a subparser for a specific data provider."""
-    provider_parser = subparsers.add_parser(
-        provider_name, help=f"Commands for {provider_name.capitalize()} data"
-    )
-    operation_subparsers = provider_parser.add_subparsers(
-        dest="operation", help="Operation to perform"
-    )
-
-    # Archive operation parser
-    archive_parser = operation_subparsers.add_parser("archive", help="Archive data to Hugging Face")
-    _add_common_arguments(archive_parser, provider_name)
-    archive_parser.add_argument(
-        "--archive-type",
-        choices=["zarr.zip", "tar"],
-        default="zarr.zip",
-        help="Type of archive to create (default: zarr.zip)",
-    )
-    archive_parser.add_argument(
-        "--workers",
-        type=int,
-        default=1,
-        help="Number of concurrent workers for parallel processing (default: 1)",
-    )
-
-    # Load operation parser (HuggingFace -> memory)
-    load_parser = operation_subparsers.add_parser(
-        "load", help="Load archived data from Hugging Face"
-    )
-    _add_common_arguments(load_parser, provider_name)
-    load_parser.add_argument(
-        "--chunks",
-        type=str,
-        help="Chunking specification in format 'dim1:size1,dim2:size2' (e.g., 'time:24,latitude:100')",
-    )
-    load_parser.add_argument(
-        "--remote",
-        action="store_true",
-        help="Load data lazily from HuggingFace without downloading",
-    )
-
-    # Consolidate operation parser
-    consolidate_parser = operation_subparsers.add_parser(
-        "consolidate", help="Consolidate hourly files into daily/monthly zarr.zip file"
-    )
-    consolidate_parser.add_argument("--year", type=int, required=True, help="Year of data")
-    consolidate_parser.add_argument("--month", type=int, required=True, help="Month of data")
-    consolidate_parser.add_argument("--day", type=int, help="Day of data (optional)")
-    consolidate_parser.add_argument(
-        "--chunks",
-        type=str,
-        help="Chunking specification for output file",
-    )
-
-
 def _add_common_arguments(parser, provider_name):
     """Add arguments common to both archive and load operations."""
     parser.add_argument("--year", type=int, required=True, help="Year of data")
@@ -115,7 +60,7 @@ def _add_common_arguments(parser, provider_name):
         parser.add_argument(
             "--region",
             choices=["global", "uk"],
-            default=DEFAULT_REGION,
+            default="global",
             help="Specify the Met Office dataset region (default: global)",
         )
 
@@ -182,25 +127,65 @@ def handle_load(provider: str, year: int, month: int, day: int, **kwargs):
 
 
 def configure_parser():
-    """Configure the main argument parser for the CLI tool.
+    """Configure the main argument parser for the CLI tool."""
+    parser = argparse.ArgumentParser(prog="open-data-pvnet", description="Open Data PVNet CLI")
 
-    Creates the main parser and adds subparsers for each supported data provider
-    (metoffice, gfs, dwd). Each provider subparser includes options for year,
-    month, day, hour, and operation type.
-
-    Returns:
-        argparse.ArgumentParser: The configured argument parser
-    """
-    parser = argparse.ArgumentParser(prog="open-data-pvnet", description="Open Data PVNet CLI Tool")
+    # Create a parent parser for the --list argument
     parser.add_argument(
         "--list",
         choices=["providers"],
         help="List available options (e.g., providers)",
-        action="store",
+        nargs="?",  # Make it optional
     )
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    for provider in PROVIDERS:
-        add_provider_parser(subparsers, provider)
+
+    # Create subparsers for commands (providers)
+    subparsers = parser.add_subparsers(dest="command", help="Data provider")
+
+    # Add provider-specific parsers
+    for provider in ["metoffice", "gfs"]:
+        provider_parser = subparsers.add_parser(
+            provider, help=f"Commands for {provider.capitalize()} data"
+        )
+        operation_subparsers = provider_parser.add_subparsers(
+            dest="operation", help="Operation to perform"
+        )
+
+        # Archive operation parser
+        archive_parser = operation_subparsers.add_parser(
+            "archive", help="Archive data to Hugging Face"
+        )
+        _add_common_arguments(archive_parser, provider)
+        archive_parser.add_argument(
+            "--archive-type",
+            choices=["zarr.zip", "tar"],
+            default="zarr.zip",
+            help="Type of archive to create (default: zarr.zip)",
+        )
+        archive_parser.add_argument(
+            "--workers",
+            type=int,
+            default=1,
+            help="Number of concurrent workers for parallel processing (default: 1)",
+        )
+
+        # Load operation parser
+        load_parser = operation_subparsers.add_parser("load", help="Load archived data")
+        _add_common_arguments(load_parser, provider)
+        load_parser.add_argument(
+            "--chunks",
+            type=str,
+            help="Chunking specification in format 'dim1:size1,dim2:size2' (e.g., 'time:24,latitude:100')",
+        )
+        load_parser.add_argument(
+            "--remote",
+            action="store_true",
+            help="Load data lazily from HuggingFace without downloading",
+        )
+
+        # Consolidate operation parser
+        consolidate_parser = operation_subparsers.add_parser("consolidate", help="Consolidate data")
+        _add_common_arguments(consolidate_parser, provider)
+
     return parser
 
 
@@ -369,37 +354,88 @@ def handle_archive(provider: str, year: int, month: int, day: int = None, **kwar
 
 
 def main():
-    """Main entry point for the application."""
-    parser = argparse.ArgumentParser(description="Open Data PVNet CLI")
-    parser.add_argument("provider", choices=["metoffice"], help="Data provider")
-    parser.add_argument(
-        "operation", choices=["download", "consolidate", "archive"], help="Operation to perform"
-    )
-    parser.add_argument("--year", type=int, required=True, help="Year")
-    parser.add_argument("--month", type=int, required=True, help="Month")
-    parser.add_argument(
-        "--day", type=int, help="Day (optional for monthly operations)"
-    )  # Made optional
-    parser.add_argument("--chunks", type=str, help="Chunk sizes as JSON string")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files")
+    """Entry point for the Open Data PVNet CLI tool.
 
+    Examples:
+    ---------
+    Met Office Data:
+        # Archive all hours for a given day with default workers (1)
+        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk -o
+
+        # Archive all hours for a given day with parallel processing with 4 workers
+        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk -o --workers 4
+
+        # Archive global region data for a specific hour
+        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region global -o
+
+        # Archive as tar instead of zarr.zip
+        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o --archive-type tar
+
+        # Consolidate daily files into monthly zarr
+        open-data-pvnet metoffice consolidate --year 2023 --month 12
+
+        # Consolidate specific day
+        open-data-pvnet metoffice consolidate --year 2023 --month 12 --day 1
+
+    GFS Data:
+        Partially implemented
+
+    DWD Data:
+        Not implemented yet
+
+    Loading Data:
+        # Load local data with default chunking
+        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk
+
+        # Load remotely without downloading
+        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk --remote
+
+        # Load with custom chunking
+        open-data-pvnet metoffice load --year 2023 --month 1 --day 16 --hour 0 --region uk --chunks "time:24,latitude:100,longitude:100"
+
+    List Available Providers:
+        open-data-pvnet --list providers
+    """
+    parser = configure_parser()
     args = parser.parse_args()
 
-    # Convert args to dict for easier handling
-    kwargs = vars(args)
+    # Handle the --list providers case first
+    if args.list == "providers":
+        print("Available providers:")
+        for provider in PROVIDERS:
+            if provider == "gfs":
+                print(f"- {provider} (partially implemented)")
+            elif provider == "dwd":
+                print(f"- {provider} (not implemented)")
+            else:
+                print(f"- {provider}")
+        return 0
+
+    # For all other commands, we need a provider and operation
+    if not args.command or not args.operation:
+        parser.print_help()
+        return 1
 
     # Load environment variables
     load_env_and_setup_logger()
 
     # Execute the requested operation
-    if args.operation == "download":
-        if args.day is None:
-            logger.error("Day parameter is required for download operation")
-            return 1
-        handle_load(**kwargs)
+    if args.operation == "load":
+        load_kwargs = {
+            "provider": args.command,
+            "year": args.year,
+            "month": args.month,
+            "day": args.day,
+            "hour": args.hour,
+            "region": args.region,
+            "overwrite": args.overwrite,
+            "chunks": args.chunks,
+            "remote": args.remote,
+        }
+        handle_load(**load_kwargs)
     elif args.operation == "consolidate":
-        handle_monthly_consolidation(**kwargs)
+        handle_monthly_consolidation(**vars(args))
     elif args.operation == "archive":
-        handle_archive(**kwargs)
+        handle_archive(**vars(args))
 
     return 0
