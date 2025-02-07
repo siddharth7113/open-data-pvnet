@@ -12,6 +12,8 @@ from pathlib import Path
 import concurrent.futures
 from typing import List, Tuple
 from open_data_pvnet.utils.data_uploader import upload_monthly_zarr, upload_to_huggingface
+from open_data_pvnet.scripts.archive import handle_archive
+from open_data_pvnet.nwp.met_office import CONFIG_PATHS
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ def _add_common_arguments(parser, provider_name):
     parser.add_argument(
         "--day",
         type=int,
-        help="Day of data (optional - if not provided, loads entire month)",
+        help="Day of data (optional - if not provided, processes entire month)",
         default=None,
     )
 
@@ -326,26 +328,41 @@ def handle_upload(provider: str, year: int, month: int, day: int = None, **kwarg
 
 def archive_to_hf(provider: str, year: int, month: int, day: int = None, **kwargs):
     """Handle archiving data to Hugging Face."""
-    config_path = Path("config.yaml")
     overwrite = kwargs.get("overwrite", False)
+    archive_type = kwargs.get("archive_type", "zarr.zip")
 
     try:
-        if day is not None:
-            # Archive daily data (existing functionality)
-            logger.info(f"Archiving daily data for {year}-{month:02d}-{day:02d}")
-            upload_to_huggingface(
+        if day is None:
+            # Archive monthly consolidated file
+            logger.info(f"Archiving monthly consolidated file for {year}-{month:02d}")
+            region = kwargs.get("region", "global")
+
+            if provider == "metoffice":
+                if region not in CONFIG_PATHS:
+                    raise ValueError(f"Invalid region '{region}'. Must be 'uk' or 'global'.")
+                config_path = CONFIG_PATHS[region]
+            else:
+                raise NotImplementedError(
+                    f"Monthly archive for provider {provider} not yet implemented"
+                )
+
+            upload_monthly_zarr(
                 config_path=config_path,
-                folder_name=f"{year}-{month:02d}-{day:02d}",
                 year=year,
                 month=month,
-                day=day,
                 overwrite=overwrite,
             )
         else:
-            # Archive monthly consolidated file
-            logger.info(f"Archiving monthly consolidated file for {year}-{month:02d}")
-            upload_monthly_zarr(
-                config_path=config_path, year=year, month=month, overwrite=overwrite
+            # Use provider-specific archive processing for daily data
+            handle_archive(
+                provider=provider,
+                year=year,
+                month=month,
+                day=day,
+                hour=kwargs.get("hour"),
+                region=kwargs.get("region", "global"),
+                overwrite=overwrite,
+                archive_type=archive_type,
             )
 
     except Exception as e:
@@ -366,7 +383,7 @@ def main():
         open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --region uk -o --workers 4
 
         # Archive global region data for a specific hour
-        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region global -o
+        open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o
 
         # Archive as tar instead of zarr.zip
         open-data-pvnet metoffice archive --year 2023 --month 12 --day 1 --hour 12 --region uk -o --archive-type tar
