@@ -301,6 +301,13 @@ Below is a glossary of key terms that might be useful when working on this proje
 - **GIS (Geographic Information System)**: A system designed to capture, store, manipulate, analyze, and visualize spatial or geographic data, widely used in solar and weather forecasting.
 - **Great Circle Distance**: The shortest distance between two points on a sphere, useful for calculating distances between locations on Earth.
 - **Solar Declination Angle**: The angle between the Sun's rays and the equatorial plane, varying throughout the year and influencing solar irradiance calculations.
+- **Solar Azimuth Angle**: The angle between the Sun's rays and the north-south line on the horizontal plane, used to determine the direction of the Sun's rays.
+- **Solar Elevation Angle**: The angle between the Sun's rays and the horizontal plane, used to determine the height of the Sun above the horizon.
+- **Solar Zenith Angle**: The angle between the Sun's rays and a line perpendicular to the Earth's surface, used to determine the angle of incidence of the Sun's rays on a surface.
+- **Solar Noon**: The time when the Sun reaches its highest point in the sky, occurring when the Sun's zenith angle is minimized.
+- **Solar Midnight**: The time when the Sun reaches its lowest point in the sky, occurring when the Sun's zenith angle is maximized.
+- **OSGB (Ordnance Survey National Grid Reference System)**: A system whereby any location in the UK is divided into a geographic grid of squares, with each square given a unique reference of letters and numbers.
+  - https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid
 
 ---
 
