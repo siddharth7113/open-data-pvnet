@@ -321,7 +321,7 @@ Below is a glossary of key terms that might be useful when working on this proje
 - **Dew Point**: The temperature at which air becomes saturated with moisture and water vapor condenses into dew, clouds, or fog.
 - **Radiative Forcing**: The change in the energy balance of the Earth's atmosphere due to factors like greenhouse gases, aerosols, and changes in solar irradiance. It is a key concept in climate change studies.
 - **Turbidity**: A measure of the atmosphere's clarity, influenced by aerosols, dust, and pollution. High turbidity reduces the amount of solar radiation reaching the Earth's surface.
-- **Ozone Layer**: A layer of ozone (O₃) in the stratosphere that absorbs the majority of the Sun’s harmful ultraviolet radiation. Changes in the ozone layer can impact solar irradiance measurements.
+- **Ozone Layer**: A layer of ozone (O₃) in the stratosphere that absorbs the majority of the Sun's harmful ultraviolet radiation. Changes in the ozone layer can impact solar irradiance measurements.
 - **Wind Shear**: A change in wind speed or direction over a short distance in the atmosphere. It can influence cloud formation, storm development, and the dispersal of aerosols.
 - **Thermal Inversion**: A phenomenon where a layer of warm air traps cooler air near the Earth's surface, preventing vertical mixing. It can lead to increased pollution and reduced solar irradiance at the surface.
 
@@ -388,6 +388,17 @@ For more details, refer to the [WMO Cloud Identification Guide](https://cloudatl
 ### Grid and Power Systems Terms
 
 - **Grid Supply Point (GSP)**: A location where electricity is transferred from the transmission network to the distribution network, serving as a critical node in the power grid.
+- **GSP ID's in PVlive**:
+  - Retrieve numerical GSP IDs from **PV_Live**: [PV_Live API](https://github.com/SheffieldSolar/PV_Live-API)
+  - Get a list of GSP IDs:
+  ```python
+  from pvlive_api import PVLive
+
+  pvl = PVLive()
+  pvl.gsp_ids
+   ```
+  - Find the official **NESO GSP region codes**: [NESO Data Portal](https://www.neso.energy/data-portal/regional-breakdown-fes-data-electricity/fes_2022_grid_supply_point_info)
+  - Cross-reference these to create your own mapping.
 - **Peak Load**: The maximum power demand in a given period, often used to assess system capacity and ensure reliability during high-demand times.
 - **Base Load**: The minimum level of demand on an electrical grid over a 24-hour period. It is typically supplied by reliable, continuous sources like nuclear or coal-fired power plants.
 - **Load Factor**: The ratio of the average load over a given period to the peak load during that same period, indicating the efficiency of grid usage.
@@ -467,7 +478,7 @@ For more details, refer to the [WMO Cloud Identification Guide](https://cloudatl
 ---
 
 ## Helpful Knowledge and Skills
-Contributing to this project doesn’t require expertise in all areas 😅. We need volunteers with skills or interest in some of the following domains to help us build different parts of the project. Plus, there’s plenty of opportunity to learn as you go!
+Contributing to this project doesn't require expertise in all areas 😅. We need volunteers with skills or interest in some of the following domains to help us build different parts of the project. Plus, there's plenty of opportunity to learn as you go!
 
 ### Programming and Development
 - **Python Programming**: Familiarity with Python for data analysis, API's, and machine learning workflows.
@@ -525,12 +536,12 @@ The transition to renewable energy is one of the most significant challenges—a
 - **Global Impact**: As we expand this project to other regions, we contribute to a worldwide effort to reduce carbon emissions and solve climate change.
 
 ### Inspiring Collaboration
-This project isn’t just about technology—it’s about building a community of innovators, engineers, and visionaries who share a passion for sustainability. Together, we can:
+This project isn't just about technology—it's about building a community of innovators, engineers, and visionaries who share a passion for sustainability. Together, we can:
 - Support the global transition to clean energy!
 - Create open-source tools that benefit everyone, from local communities to international organizations!
 - Inspire others to join the renewable energy movement!
 
-By contributing to this project, you’re not just writing code or analyzing data—you’re making a meaningful impact on the planet and helping pave the way to a sustainable future for many generations to come. 🌍✨
+By contributing to this project, you're not just writing code or analyzing data—you're making a meaningful impact on the planet and helping pave the way to a sustainable future for many generations to come. 🌍✨
 ---
 
 ## Development and Testing Guide
