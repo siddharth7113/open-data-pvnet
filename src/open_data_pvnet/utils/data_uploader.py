@@ -11,14 +11,30 @@ logger = logging.getLogger(__name__)
 
 
 def _validate_config(config):
-    """Validate configuration and return required values."""
-    repo_id = config.get("general", {}).get("destination_dataset_id")
-    if not repo_id:
-        raise ValueError("No destination_dataset_id found in the configuration file.")
+    """
+    Validate the configuration and extract necessary paths.
 
-    local_output_dir = config["input_data"]["nwp"]["met_office"]["local_output_dir"]
-    zarr_base_path = Path(local_output_dir) / "zarr"
-    return repo_id, zarr_base_path
+    Args:
+        config (dict): Configuration dictionary
+
+    Returns:
+        tuple: (repo_id, zarr_base_path)
+    """
+    # Check if it's a DWD config
+    if "dwd" in config["input_data"]["nwp"]:
+        local_output_dir = config["input_data"]["nwp"]["dwd"]["local_output_dir"]
+        repo_id = config["general"]["destination_dataset_id"]
+        zarr_base_path = Path(local_output_dir) / "zarr"
+        return repo_id, zarr_base_path
+
+    # Check if it's a Met Office config
+    if "met_office" in config["input_data"]["nwp"]:
+        local_output_dir = config["input_data"]["nwp"]["met_office"]["local_output_dir"]
+        repo_id = config["general"]["destination_dataset_id"]
+        zarr_base_path = Path(local_output_dir) / "zarr"
+        return repo_id, zarr_base_path
+
+    raise ValueError("Configuration must contain either 'dwd' or 'met_office' under input_data.nwp")
 
 
 def _validate_token():
