@@ -55,6 +55,7 @@ def test_fetch_dwd_data_success(mocker, mock_config, tmp_path):
 
     mock_get = mocker.patch("requests.get")
     mock_get.return_value.content = html_content
+    mock_get.return_value.text = html_content.decode('utf-8')
     mock_get.return_value.raise_for_status = Mock()
     mock_get.return_value.iter_content = lambda chunk_size: [b"mock grib data"]
 

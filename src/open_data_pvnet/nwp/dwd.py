@@ -6,6 +6,7 @@ import xarray as xr
 import bz2
 import os
 from urllib.parse import urljoin
+from html.parser import HTMLParser
 
 from open_data_pvnet.utils.env_loader import PROJECT_BASE
 from open_data_pvnet.utils.config_loader import load_config
@@ -14,6 +15,20 @@ from open_data_pvnet.utils.data_uploader import upload_to_huggingface
 logger = logging.getLogger(__name__)
 
 CONFIG_PATH = PROJECT_BASE / "src/open_data_pvnet/configs/dwd_data_config.yaml"
+
+class DWDHTMLParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            for attr in attrs:
+                if attr[0] == 'href':
+                    self.links.append(attr[1])
+
+    def error(self, message):
+        pass  # Override to prevent errors from being raised
 
 def generate_variable_url(variable: str, year: int, month: int, day: int, hour: int) -> str:
     """
@@ -88,16 +103,17 @@ def fetch_dwd_data(year: int, month: int, day: int, hour: int):
             response.raise_for_status()
 
             # Parse the HTML to find the correct file
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(response.content, 'html.parser')
-            links = soup.find_all('a')
+            parser = DWDHTMLParser()
+            parser.feed(response.text)
+            logger.debug(f"HTML content: {response.text}")
+            links = parser.links
+            logger.debug(f"Extracted links: {links}")
             
             timestamp = f"{year:04d}{month:02d}{day:02d}{hour:02d}"
             target_prefix = f"icon-eu_europe_regular-lat-lon_single-level_{timestamp}"
             
             found_file = False
-            for link in links:
-                href = link.get('href')
+            for href in links:
                 if not href or not href.startswith(target_prefix):
                     continue
 
