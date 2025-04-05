@@ -1,0 +1,6 @@
+[submodule "ocf-data-sampler"]
+	path = ocf-data-sampler
+	url = https://github.com/openclimatefix/ocf-data-sampler
+[submodule "PVNet"]
+	path = PVNet
+	url = https://github.com/openclimatefix/PVNet
