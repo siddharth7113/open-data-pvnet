@@ -3,32 +3,43 @@ general:
   description: "Configuration for GFS data sampling"
 
 input_data:
+  gsp:
+    # Path to GSP data in zarr format
+    # e.g. gs://solar-pv-nowcasting-data/PV/GSP/v7/pv_gsp.zarr
+    zarr_path: s3://ocf-open-data-pvnet/data/uk/pvlive/v0/target_data.nc #ODO update, pull from s3
+    interval_start_minutes: -60
+    # Specified for intraday currently
+    interval_end_minutes: 480
+    time_resolution_minutes: 30
+    # Random value from the list below will be chosen as the delay when dropout is used
+    # If set to null no dropout is applied. Only values before t0 are dropped out for GSP.
+    # Values after t0 are assumed as targets and cannot be dropped.
+    dropout_timedeltas_minutes: []
+    dropout_fraction: 0.0 # Fraction of samples with dropout
+
   nwp:
     gfs:
       time_resolution_minutes: 180 # Match the dataset's resolution (3 hours)
-      interval_start_minutes: 0
-      interval_end_minutes: 1080 # 6 forecast steps (6 * 3 hours)
-      dropout_timedeltas_minutes: null
-      accum_channels: []
-      max_staleness_minutes: 1080 # Match interval_end_minutes for consistency
-      zarr_path: "s3://ocf-open-data-pvnet/data/gfs.zarr"
+      interval_start_minutes: -180
+      interval_end_minutes: 540
+      dropout_fraction: 0.0
+      dropout_timedeltas_minutes: []
+      zarr_path: "s3://ocf-open-data-pvnet/data/gfs.zarr/"
       provider: "gfs"
-      image_size_pixels_height: 1
-      image_size_pixels_width: 1
+      image_size_pixels_height: 10
+      image_size_pixels_width: 10
       channels:
-        [
-          "dlwrf",
-          "dswrf",
-          "hcc",
-          "lcc",
-          "mcc",
-          "prate",
-          "r",
-          "t",
-          "tcc",
-          "u10",
-          "u100",
-          "v10",
-          "v100",
-          "vis",
-        ]
+        - dlwrf # downwards long-wave radiation flux
+        - dswrf # downwards short-wave radiation flux
+        - hcc # high cloud cover
+        - mcc # medium cloud cover
+        - lcc # low cloud cover
+        - prate # precipitation rate
+        - r # relative humidity
+        - t # 2-metre temperature
+        - tcc # total cloud cover
+        - u10 # 10-metre wind U component
+        - u100 # 100-metre wind U component
+        - v10 # 10-metre wind V component
+        - v100 # 100-metre wind V component
+        - vis # visibility
