@@ -270,7 +270,8 @@ Below is a glossary of key terms that might be useful when working on this proje
 ### Weather Forecasting and Numerical Weather Prediction (NWP) Terms
 - **Numerical Weather Prediction (NWP)**: The use of mathematical models to simulate atmospheric processes and predict future weather conditions.
 - **Gridded Data**: Data arranged in a regular, grid-like structure, where each cell or grid point represents a specific geographical area and contains corresponding data values (e.g., temperature, solar irradiance, or wind speed).
-- **Global Forecast System (GFS)**: A global NWP model produced by the National Weather Service that provides weather forecasts up to 16 days in advance.
+- **Global Forecast System (GFS)**: A global NWP model produced by the National Centers for Environmental Prediction (NCEP), a part of the National Oceanic and Atmospheric Administration (NOAA). It provides weather forecasts up to 16 days in advance.
+  - [GFS Documentation](https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast)
 - **European Centre for Medium-Range Weather Forecasts (ECMWF)**: An independent intergovernmental organization that produces highly accurate medium-range weather forecasts.
 - **Model Resolution**: The spatial and temporal granularity of an NWP model, usually measured in kilometers or degrees.
 - **Initialization**: The process of incorporating current observational data into a model to start a forecast.
