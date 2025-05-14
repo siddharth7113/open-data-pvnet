@@ -46,6 +46,10 @@ We are looking for volunteers with the following skills:
 
 Ready to dive in? Check out our [Getting Started Guide](docs/getting_started.md) for an introduction to the key concepts and how you can contribute effectively.
 
+### Notebooks
+
+- [Understanding GFS Data](notebooks/understanding_gfs_data.ipynb)
+
 ---
 
 If you're passionate about **renewable energy, open-source collaboration, and sustainability**, please join us in advancing solar forecasting solutions for a better future! 🌍☀️✨
