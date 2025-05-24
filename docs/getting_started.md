@@ -112,6 +112,8 @@ This project applies core machine learning (ML) principles to the domain of sola
 
 For contributors unfamiliar with these concepts, the [Machine Learning Terms](#machine-learning-terms) section provides a glossary of key terms to get started.
 
+Tutorial: Getting Started with ML Training: [OCF Open Data PVNet Notebook](../notebooks/gfs_sample.ipynb)
+
 ---
 
 ## Datasets for Solar Forecasting
