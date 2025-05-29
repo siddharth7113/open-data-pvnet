@@ -291,6 +291,7 @@ Below is a glossary of key terms that might be useful when working on this proje
 
 - **Geostationary**: A satellite orbit where the satellite remains fixed relative to a specific point on Earth's surface, providing continuous observation of the same region. Commonly used in weather monitoring and solar radiation measurement.
 - **Geospatial Data**: Information about objects, events, or phenomena on Earth's surface, represented by geographic coordinates and often used in mapping and analysis.
+- **Lambert Azimuthal Equal Area projection**: A map projection that preserves area while minimizing distortion. It's particularly useful for mapping polar regions and is commonly used in meteorological applications, especially for regional weather forecasting. The projection maintains accurate representation of areas while sacrificing some angular relationships.
 - **Latitude**: The angular distance of a location north or south of the equator, measured in degrees. Important for determining solar angles and irradiance.
 - **Longitude**: The angular distance of a location east or west of the prime meridian, measured in degrees. Used in conjunction with latitude to pinpoint geographic locations.
 - **Spatial Resolution**: The level of detail in a geospatial dataset, often defined by the size of the grid cells or pixels representing the data. Higher resolution provides more detail but requires more storage and processing power.
