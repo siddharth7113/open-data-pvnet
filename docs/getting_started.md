@@ -232,22 +232,64 @@ By effectively leveraging APIs like PVlive and weather services, contributors ca
 ---
 
 ## Data Pipelines for Solar Forecasting
-Explore how pipelines prepare and batch data for machine learning models, making training and testing efficient.
+
+Data pipelines are crucial for preparing and processing data for machine learning models. In the context of solar forecasting, these pipelines handle multiple data sources and transform them into a format suitable for training and inference.
+
+### OCF Data Pipeline Components
+
+1. **OCF Data Sampler**
+   - A Python library that standardizes data loading and preprocessing
+   - Handles both NWP (Numerical Weather Prediction) and PV generation data
+   - Provides PyTorch Dataset implementations for efficient batch processing
+   - Supports various data formats including Zarr, NetCDF, and CSV
+
+2. **PVNet Integration**
+   - Works with OCF's PVNet model for solar forecasting
+   - Processes multiple input streams:
+     - Weather forecast data (NWP)
+     - Historical PV generation data
+     - Satellite imagery (when available)
+   - Handles data normalization and feature engineering
+
+### Key Pipeline Features
+
+1. **Data Loading**
+   - Efficient loading of large NWP datasets using Zarr format
+   - Real-time PV generation data retrieval via PVLive API
+   - Support for multiple weather data sources (Met Office, GFS, etc.)
+
+2. **Preprocessing Steps**
+   - Temporal alignment of different data sources
+   - Spatial interpolation for matching grid resolutions
+   - Feature normalization and standardization
+   - Missing data handling and quality checks
+
+3. **Batch Creation**
+   - Creation of training/validation/test splits
+   - Time-series specific considerations
+   - Efficient memory management for large datasets
+   - Support for both regional and national-level forecasting
+
+### Example Pipeline Usage Refer to:
+- [OCF Data Sampler Documentation](https://github.com/openclimatefix/ocf-data-sampler)
+- [PVNet Model Repository](https://github.com/openclimatefix/PVNet)
+- [GFS Sample Notebook](../notebooks/gfs_sample.ipynb)
 
 ---
 
 ## Benchmarks and Comparisons
-Understand the importance of benchmarking and how our models compare to existing solutions.
+Understand the importance of benchmarking and how our models compare to existing solutions. These are still in development...
 
 ---
 
 ## Geographical Adaptability
-This project won't be limited to the UK eventually. Learn how it can be adapted to other regions and data sources.
+This project won't be limited to the UK eventually. We hope to support other regions and data sources in the future. Your help is welcome!
 
 ---
 
 ## Key Tools and Technologies
-Familiarize yourself with tools like Python, pandas, and open-source libraries like `ocf-datasample`.
+Familiarize yourself with tools like Python, pandas, and open-source libraries like - [OCF Data Sampler](https://github.com/openclimatefix/ocf-data-sampler)
+- [PVNet Model](https://github.com/openclimatefix/PVNet)
 
 ---
 
