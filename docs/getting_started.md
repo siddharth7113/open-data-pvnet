@@ -415,7 +415,7 @@ For more details, refer to the [WMO Cloud Identification Guide](https://cloudatl
 - **GRIB (GRIdded Binary)**: A concise data format commonly used in meteorology to store historical and forecast weather data. GRIB files are optimized for large datasets, representing grid-based information such as temperature, wind speed, and precipitation. They are often used by Numerical Weather Prediction (NWP) models and are known for their efficient storage and compression.
 
 #### **CF Conventions**
-- **CF (Climate and Forecast) Conventions**: A set of metadata standards for describing scientific data, particularly in NetCDF files. These conventions promote the processing and sharing of files created with the NetCDF API by providing a definitive description of what the data in each variable represents, and the spatial and temporal properties of the data.
+- **CF (Climate and Forecast) Conventions**: The CF (Climate and Forecast) Convention standards are a set of metadata conventions designed to promote the processing and sharing of climate and forecast data, particularly for gridded data (e.g., netCDF, Zarr, or other array-based formats). Developed by the climate and weather modeling communities, these standards ensure that data files are self-describing, interoperable, and usable across different software tools and research groups.
 - **Standard Names**: CF Conventions define a controlled vocabulary of standard names that precisely describe physical quantities. For example:
   - `air_temperature`: The bulk temperature of the air, suitable for air temperature measurements
   - `surface_temperature`: Temperature of the surface of the Earth
