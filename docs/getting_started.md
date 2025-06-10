@@ -413,13 +413,25 @@ For more details, refer to the [WMO Cloud Identification Guide](https://cloudatl
 - **NetCDF (Network Common Data Form)**: A self-describing, machine-independent data format designed for storing and sharing array-oriented scientific data. Commonly used in meteorology, oceanography, and other geosciences, NetCDF supports large datasets and includes metadata for describing the data's structure and meaning.
 - **HDF5 (Hierarchical Data Format version 5)**: A versatile data model that supports the storage of large, complex datasets in a hierarchical structure. HDF5 is widely used for scientific computing, offering high performance, scalability, and the ability to handle large amounts of data efficiently.
 - **GRIB (GRIdded Binary)**: A concise data format commonly used in meteorology to store historical and forecast weather data. GRIB files are optimized for large datasets, representing grid-based information such as temperature, wind speed, and precipitation. They are often used by Numerical Weather Prediction (NWP) models and are known for their efficient storage and compression.
-- **Power Units**:
-  - **Watt (W)**: The basic unit of power in the International System of Units (SI), representing one joule per second.
-  - **Kilowatt (kW)**: Equal to 1,000 watts, commonly used to measure the capacity of small solar systems.
-  - **Megawatt (MW)**: Equal to 1,000 kilowatts or one million watts, used for larger solar farms and power plants.
-  - **Gigawatt (GW)**: Equal to 1,000 megawatts or one billion watts, used to represent national or regional energy capacities.
-  - **Terawatt (TW)**: Equal to 1,000 gigawatts or one trillion watts, often used for global energy capacity.
-  - **Petawatt (PW)**: Equal to 1,000 terawatts or one quadrillion watts, applicable for global-scale discussions.
+
+#### **CF Conventions**
+- **CF (Climate and Forecast) Conventions**: A set of metadata standards for describing scientific data, particularly in NetCDF files. These conventions promote the processing and sharing of files created with the NetCDF API by providing a definitive description of what the data in each variable represents, and the spatial and temporal properties of the data.
+- **Standard Names**: CF Conventions define a controlled vocabulary of standard names that precisely describe physical quantities. For example:
+  - `air_temperature`: The bulk temperature of the air, suitable for air temperature measurements
+  - `surface_temperature`: Temperature of the surface of the Earth
+  - `surface_downwelling_shortwave_flux_in_air`: Total solar radiation reaching the Earth's surface
+- **Units**: CF Conventions require the use of standard units and provide methods for describing how to derive units.
+- **Dimensions**: The conventions specify how to identify coordinate variables and auxiliary coordinate variables.
+- **Metadata**: Includes attributes for describing the data's content, quality, and provenance.
+- For a complete list of CF standard names, visit the [CF Standard Names Table](https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html)
+
+#### **Power Units**:
+- **Watt (W)**: The basic unit of power in the International System of Units (SI), representing one joule per second.
+- **Kilowatt (kW)**: Equal to 1,000 watts, commonly used to measure the capacity of small solar systems.
+- **Megawatt (MW)**: Equal to 1,000 kilowatts or one million watts, used for larger solar farms and power plants.
+- **Gigawatt (GW)**: Equal to 1,000 megawatts or one billion watts, used to represent national or regional energy capacities.
+- **Terawatt (TW)**: Equal to 1,000 gigawatts or one trillion watts, often used for global energy capacity.
+- **Petawatt (PW)**: Equal to 1,000 terawatts or one quadrillion watts, applicable for global-scale discussions.
 - **Energy vs. Power**:
   - **Power**: The rate at which energy is produced or consumed, typically measured in watts (W).
   - **Energy**: The total amount of work performed over time, measured in watt-hours (Wh), kilowatt-hours (kWh), etc.
