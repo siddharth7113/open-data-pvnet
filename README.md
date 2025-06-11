@@ -49,8 +49,8 @@ Ready to dive in? Check out our [Getting Started Guide](docs/getting_started.md)
 ### Notebooks
 
 - [Understanding GFS Data](notebooks/understanding_gfs_data.ipynb)
+- [Understanding Met Office data](notebooks/understanding_metoffice_data.ipynb)
 - [GFS Sample Notebook](notebooks/gfs_sample.ipynb)
-- [Understanding GFS Data](notebooks/understanding_gfs_data.ipynb)
 ---
 
 If you're passionate about **renewable energy, open-source collaboration, and sustainability**, please join us in advancing solar forecasting solutions for a better future! 🌍☀️✨
