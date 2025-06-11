@@ -316,7 +316,13 @@ Below is a glossary of key terms that might be useful when working on this proje
 - **Gridded Data**: Data arranged in a regular, grid-like structure, where each cell or grid point represents a specific geographical area and contains corresponding data values (e.g., temperature, solar irradiance, or wind speed).
 - **Global Forecast System (GFS)**: A global NWP model produced by the National Centers for Environmental Prediction (NCEP), a part of the National Oceanic and Atmospheric Administration (NOAA). It provides weather forecasts up to 16 days in advance.
   - [GFS Documentation](https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast)
-  - Tutorial: Understanding GFS data: [Understanding GFS Data](../notebooks/understanding_gfs_data.ipynb)
+  - Tutorial:  [Understanding GFS Data](../notebooks/understanding_gfs_data.ipynb)
+- **UK Met Office UKV Model**: A high-resolution (2km grid spacing) weather forecast model specifically designed for the UK region. The UKV (UK Variable) model uses a variable-resolution grid that allows it to represent UK weather patterns in greater detail than global models. It provides forecasts up to 54 hours ahead with hourly outputs, making it particularly valuable for solar forecasting in the UK.
+  - Key features include detailed cloud physics, advanced data assimilation, and specific tuning for UK weather patterns
+  - Variables include cloud cover (at multiple levels), solar radiation, temperature, and wind
+  - Uses Lambert Azimuthal Equal Area projection centered on the UK
+  - [Met Office Site](https://www.metoffice.gov.uk/)
+  - Tutorial: [Understanding Met Office data](../notebooks/understanding_metoffice_data.ipynb)
 - **European Centre for Medium-Range Weather Forecasts (ECMWF)**: An independent intergovernmental organization that produces highly accurate medium-range weather forecasts.
 - **Model Resolution**: The spatial and temporal granularity of an NWP model, usually measured in kilometers or degrees.
 - **Initialization**: The process of incorporating current observational data into a model to start a forecast.
