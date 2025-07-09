@@ -127,6 +127,9 @@ A NWP dataset used for UK solar forecasting. See [Met Office Dataset Documentati
 - Data quality considerations
 - Access instructions via Hugging Face
 
+### NWP Attributes for Solar Forecasting
+When working with any NWP dataset for solar forecasting, certain atmospheric variables are particularly important for accurate predictions. The [NWP Solar Attributes Reference](nwp_solar_attributes.md) provides a comprehensive list of the key CF Standard Names and attributes that should be prioritized when available in NWP models. This includes core variables like solar radiation fluxes, cloud cover at different levels, temperature, and wind, as well as additional variables like aerosol optical depth and surface albedo that can enhance forecast accuracy in specific conditions. While not all NWP models will contain every variable listed, this reference helps ensure consistency and guides data collection efforts across different weather data sources.
+
 ### Other Weather Datasets
 For a complete list of available weather datasets and their descriptions, see the [Datasets Guide](datasets.md).
 
