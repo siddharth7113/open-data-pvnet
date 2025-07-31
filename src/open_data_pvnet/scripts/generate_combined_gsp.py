@@ -1,10 +1,47 @@
+"""
+Generate Combined GSP Data Script
+
+This script fetches PVLive data for all GSPs (0-318) and combines them into a single Zarr dataset.
+
+Usage:
+    python src/open_data_pvnet/scripts/generate_combined_gsp.py --start-year 2023 --end-year 2024 --output-folder data
+
+Requirements:
+    - pvlive-api
+    - pandas
+    - xarray
+    - zarr
+    - typer
+
+The script will:
+1. Fetch data for each GSP ID from PVLive API
+2. Add gsp_id column to each dataset
+3. Combine all datasets into a single DataFrame
+4. Convert to xarray Dataset and save as Zarr format
+5. Output file: combined_gsp_{start_date}_{end_date}.zarr
+
+Note: Some GSP IDs may not exist and will be skipped with a warning message.
+"""
+
 import pandas as pd
 import xarray as xr
 from datetime import datetime
 import pytz
 import os
 import typer
-from src.open_data_pvnet.scripts.fetch_pvlive_data import PVLiveData
+import sys
+
+try:
+    from .fetch_pvlive_data import PVLiveData
+except ImportError:
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, script_dir)
+        from fetch_pvlive_data import PVLiveData
+    except ImportError:
+        parent_dir = os.path.dirname(script_dir)
+        sys.path.insert(0, parent_dir)
+        from scripts.fetch_pvlive_data import PVLiveData
 
 def main(
     start_year: int = typer.Option(2020, help="Start year for data collection"),
@@ -19,21 +56,32 @@ def main(
 
     data_source = PVLiveData()
 
-    all_records = []
+    all_dataframes = []
 
     # Changed range to start from 0 to include gsp_id=0
     for gsp_id in range(0, 319):  
-        records = data_source.get_data_between(
+        print(f"Processing GSP ID: {gsp_id}")
+        df = data_source.get_data_between(
             start=range_start,
             end=range_end,
             entity_id=gsp_id,
             extra_fields="capacity_mwp,installedcapacity_mwp"
         )
-        for r in records:
-            r["gsp_id"] = gsp_id
-        all_records.extend(records)
+        
+        if df is not None and not df.empty:
+            # Add gsp_id column to the dataframe
+            df["gsp_id"] = gsp_id
+            all_dataframes.append(df)
+        else:
+            print(f"No data found for GSP ID: {gsp_id}")
 
-    df_pv = pd.DataFrame(all_records)
+    # Concatenate all dataframes
+    if all_dataframes:
+        df_pv = pd.concat(all_dataframes, ignore_index=True)
+    else:
+        print("No data found for any GSP IDs")
+        return
+
     df_pv.rename(columns={"datetime": "datetime_gmt"}, inplace=True)
     df_pv["datetime_gmt"] = pd.to_datetime(df_pv["datetime_gmt"], utc=True).dt.tz_convert(None)
     df_pv = df_pv.set_index(["gsp_id", "datetime_gmt"])
