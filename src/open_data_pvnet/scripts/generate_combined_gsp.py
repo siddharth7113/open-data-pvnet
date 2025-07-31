@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 import os
 import typer
-from open_data_pvnet.scripts.fetch_pvlive_data import PVLiveData  
+from fetch_pvlive_data import PVLiveData  
 
 
 def main(
