@@ -29,8 +29,11 @@ from datetime import datetime
 import pytz
 import os
 import typer
+import logging
 
 from src.open_data_pvnet.scripts.fetch_pvlive_data import PVLiveData
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main(
     start_year: int = typer.Option(2020, help="Start year for data collection"),
@@ -49,7 +52,7 @@ def main(
 
     # Changed range to start from 0 to include gsp_id=0
     for gsp_id in range(0, 319):  
-        print(f"Processing GSP ID: {gsp_id}")
+        logging.info(f"Processing GSP ID {gsp_id}")
         df = data_source.get_data_between(
             start=range_start,
             end=range_end,
@@ -62,13 +65,13 @@ def main(
             df["gsp_id"] = gsp_id
             all_dataframes.append(df)
         else:
-            print(f"No data found for GSP ID: {gsp_id}")
+            logging.warning(f"No data available for GSP ID {gsp_id}")
 
     # Concatenate all dataframes
     if all_dataframes:
         df_pv = pd.concat(all_dataframes, ignore_index=True)
     else:
-        print("No data found for any GSP IDs")
+        logging.error("No data retrieved for any GSP IDs - terminating")
         return
 
     df_pv.rename(columns={"datetime": "datetime_gmt"}, inplace=True)
@@ -83,8 +86,8 @@ def main(
     output_path = os.path.join(output_folder, filename)
     xr_pv.to_zarr(output_path, mode="w", consolidated=True)
 
-    print(f"Zarr dataset with all 319 GSPs (0-318) successfully saved to {output_path}")
-    print(f"Data range: {range_start.date()} to {range_end.date()}")
+    logging.info(f"Successfully saved combined GSP dataset to {output_path}")
+    logging.info(f"Dataset contains GSPs 0-318 for period {range_start.date()} to {range_end.date()}")
 
 
 if __name__ == "__main__":
