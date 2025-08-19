@@ -31,7 +31,7 @@ dependencies = [
     "requests",
     "xarray",
     "zarr",
-    "pvnet=4.1.19"
+    "pvnet=4.1.19",
     "ocf-data-sampler==0.2.32",
     "ocf_ml_metrics>=0.0.11",
     "huggingface-hub",
