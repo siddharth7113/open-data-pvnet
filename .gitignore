@@ -99,3 +99,8 @@ data/
 *.nc
 *.zarr.zip
 
+# custom
+config_tree.txt
+GFS_samples/
+PLACEHOLDER/
+*.zarr
